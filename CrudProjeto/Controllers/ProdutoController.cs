@@ -1,39 +1,54 @@
 ﻿using CrudProjetoClassLibrary.Entidades;
+using CrudProjetoClassLibrary.Negocios;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CrudProjeto.Controllers
 {
     public class ProdutoController : Controller
     {
-        private static List<Produto> Produtos = new List<Produto>
-        {
-            new Produto { Id = 1, Nome = "Produto A", Preco = 10.0m },
-            new Produto { Id = 2, Nome = "Produto B", Preco = 20.0m },
-            new Produto { Id = 3, Nome = "Produto C", Preco = 30.0m }
-        };
         public IActionResult Index()
         {
-            return View(Produtos);
+            var produtos = new ProdutoNegocios().RetornaProdutos();
+            return View(produtos);
+        }     
+        [HttpPost]
+        public IActionResult Create(Produto produto)
+        {
+            if (ModelState.IsValid)
+            {               
+                try
+                {
+                    new ProdutoNegocios().CreateProduto(produto);
+
+                    TempData["SuccessMessage"] = "Produto criado com sucesso!";
+                    return RedirectToAction("Index");
+
+                }
+                catch (Exception ex)
+                {
+                    TempData["ErrorMessage"] = $"Ocorreu um erro ao criar o produto: {ex.Message}";
+                }
+            }
+            return View(produto);
         }
         [HttpPost]
         public IActionResult Edit(Produto produto)
         {
-            var prod = Produtos.FirstOrDefault(p => p.Id == produto.Id);
-            if (prod != null)
-            {
-                prod.Nome = produto.Nome;
-                prod.Preco = produto.Preco;
-            }
+            new ProdutoNegocios().AtualizaProduto(produto);
             return RedirectToAction("Index");
         }
 
         [HttpPost]
         public IActionResult Delete(int id)
         {
-            var prod = Produtos.FirstOrDefault(p => p.Id == id);
-            if (prod != null)
+            try
             {
-                Produtos.Remove(prod);
+                new ProdutoNegocios().ExcluirProduto(id);
+                TempData["SuccessMessage"] = "Produto excluído com sucesso!";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Ocorreu um erro ao excluir o produto: {ex.Message}";
             }
             return RedirectToAction("Index");
         }
